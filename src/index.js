@@ -10,10 +10,9 @@ var index_counter = 0
 document.addEventListener('click', function(e) {
     if (e.target.id == 'send_btn') {
         var result = ipcRenderer.sendSync('click-action')
-        console.log(result)
     
         if (result != -1) {
-            addTaskElement(index_counter)
+            addTask(index_counter)
             index_counter++
         }
     }
@@ -35,32 +34,55 @@ function removeElement(elementId) {
     document.getElementById("base_node").removeChild(element);
 }
 
-function addTaskElement(task_id) {
-    var contener = document.createElement("div")
-    contener.setAttribute("id", "task" + task_id)
+function addTask(task_id) {
+    var contener = CreateElement("div", false, ["id", "task" + task_id], false)
 
-    var task_label = document.createElement("div")
-    task_label.setAttribute("contenteditable", "true")
-    task_label.innerHTML += "New Task " + task_id
+    var task_label = CreateElement("div", true, [], "New Task " + task_id)
+    var text_node = CreateElement("input", false, ["type", "text"], false)
 
-    var text_node = document.createElement("input")
-    text_node.setAttribute("type", "text")
+    var done_button = CreateElement("button", false, ["id", "done" + task_id], "DONE")
+    var settings_button = CreateElement("button", false, ["id", "settings" + task_id], "SETTINGS")
 
-    var done_button = document.createElement("button")
-    done_button.setAttribute("id", "done" + task_id)
-    done_button.innerHTML = "DONE"
+    task = AppendElementsToTaskWithLineBreak(contener, [
+        task_label, true,
+        text_node, true,
+        done_button, false,
+        settings_button, true
+    ])
 
-    var settings_button = document.createElement("button")
-    settings_button.setAttribute("id", "settings" + task_id)
-    settings_button.innerHTML = "SETTINGS"
-    
-    contener.appendChild(task_label)
-    contener.innerHTML += "<br>"
-    contener.appendChild(text_node)
-    contener.innerHTML += "<br>"
-    contener.appendChild(done_button)
-    contener.appendChild(settings_button)
-    contener.innerHTML += "<br>"
+    AppendToRootNode(task)
+}
 
-    base_node.appendChild(contener)
+function CreateElement(html_tag, is_editable, list_of_attributes, inner_html) {
+    var element = document.createElement(html_tag)
+
+    for(var i = 0; i < list_of_attributes.length; i += 2) {
+        element.setAttribute(list_of_attributes[i], list_of_attributes[i + 1])
+    }
+
+    if (is_editable) {
+        element.setAttribute("contenteditable", "true")
+    }
+
+    if (inner_html) {
+        element.innerHTML += inner_html
+    }
+
+    return element
+}
+
+function AppendElementsToTaskWithLineBreak(contener, task_elements) {
+    for (var i = 0; i < task_elements.length; i += 2) {
+        contener.appendChild(task_elements[i])
+
+        if (task_elements[i + 1] == true) {
+            contener.innerHTML += "<br>"
+        }
+    }
+
+    return contener
+}
+
+function AppendToRootNode(task) {
+    base_node.appendChild(task)
 }
