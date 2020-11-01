@@ -3,14 +3,9 @@ function addTask(task_id) {
     var components_box = createElement("div", false, ["id", "components"], false)
 
     var task_label = createElement("h3", true, [], "New Task " + task_id)
-    var text_node = createElement("input", false, ["type", "text"], false)
 
-    var done_button = createElement("button", false, ["id", "done" + task_id], "DONE")
-    var settings_button = createElement("button", false, ["id", "settings" + task_id], "SETTINGS")
-
-    components_box = appendElementsToTaskWithLineBreak(components_box, [
-        text_node, true
-    ])
+    var done_button = createElement("button", false, ["id", "done"], "DONE")
+    var settings_button = createElement("button", false, ["id", "settings"], "EDIT")
 
     task = appendElementsToTaskWithLineBreak(contener, [
         task_label, false,

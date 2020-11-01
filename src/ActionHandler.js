@@ -30,7 +30,7 @@ function taskSettings(event){
         buttons: [
             "Cancel",
             "Add New Component",
-            "Delete Existing Component"
+            "Edit Task"
         ],
         defaultId: 0,
         cancelId: -1,

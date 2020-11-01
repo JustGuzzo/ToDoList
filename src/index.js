@@ -10,6 +10,8 @@ createBaseNode()
 document.addEventListener('click', function(e) {
     button = e.target
 
+    console.log(button.parentNode.id)
+
     if (button.id == 'send_btn') {
         checkCreateNewTaskButton()
     }
@@ -28,17 +30,50 @@ function checkCreateNewTaskButton() {
 }
 
 function checkOtherTaskButtons(button) {
-    for(var i = 0; i <= index_counter; i++) {
-        var parent_node = button.parentNode
+    var parent_node = button.parentNode
 
-        switch(button.id) {
-            case "done" + i:
-                doneButtonClickAction(parent_node)
-                break
+    switch(button.id) {
+        case "done":
+            //doneButtonClickAction(parent_node)
+            settingsButtonClickAction(parent_node)
+            break
 
-            case "settings" + i:
-                settingsButtonClickAction(parent_node)
-                break
+        case "settings":
+            toggleButton(button)
+            break
+        case "delete_component":
+            deleteComponentClickAction(parent_node)
+            break
+    }
+}
+
+function toggleButton() {
+    var components_box = TaskComponents.getComponentsBoxFromTask(button.parentNode)
+    var children_component_array = components_box.childNodes
+
+    var task = components_box.parentNode
+    var editable = getAllEditableElementsFromTask(task)
+
+    if(button.getAttribute('class') == 'toggle_on') {
+        button.setAttribute('class', 'toggle_off')
+
+        for(var i = 0; i < children_component_array.length; i++) {
+           children_component_array[i].querySelector("button").setAttribute("class", "hidden")
+        }
+
+        for(var i = 0; i < editable.length; i++) {
+            editable[i].setAttribute("contenteditable", "false")
+         }
+    }
+    else {
+        button.setAttribute('class', 'toggle_on')
+
+        for(var i = 0; i < children_component_array.length; i++) {
+           children_component_array[i].querySelector("button").setAttribute("class", "shown")
+        }
+
+        for(var i = 0; i < editable.length; i++) {
+           editable[i].setAttribute("contenteditable", "true")
         }
     }
 }
@@ -52,7 +87,7 @@ function settingsButtonClickAction(parent_node) {
 
     switch(result) {
         case 0:
-            //TaskComponents.addComponentToTask(parent_node, "checklist")
+            TaskComponents.addComponentToTask(parent_node, "checklist")
             console.log("Add component menu")
             break
         case 1:
@@ -61,6 +96,16 @@ function settingsButtonClickAction(parent_node) {
         default:
             break
     }
+}
+
+function deleteComponentClickAction(button) {
+    var component = button.parentNode
+    var target_task = component.parentNode
+    TaskComponents.removeComponent(target_task, component)
+}
+
+function getAllEditableElementsFromTask(target_task) {
+    return target_task.querySelectorAll("[contenteditable]")
 }
 
 function createBaseNode() {

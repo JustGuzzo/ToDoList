@@ -1,0 +1,53 @@
+* {
+    font-size: 24px;
+}
+
+h5 {
+    display: inline-block;
+    margin: 0;
+}
+
+span {
+    margin-top: 2em;
+}
+
+navbar {
+    width: auto;
+    height: 100px;
+}
+
+navbar#component {
+    width: 100%;
+    margin: 2em;
+}
+
+navbar button {
+    display: block;
+}
+
+section {
+    width: 100%;
+    height: auto;
+}
+
+input {
+    margin-left: 3em;
+}
+
+.toggle_on {
+    background-color: #ff0040;
+}
+
+.toggle_off {
+    background-color: inherit;
+}
+
+.hidden {
+    display: none;
+}
+
+.shown {
+    display: inline-block;
+    position: absolute;
+    right: 5em;
+}
