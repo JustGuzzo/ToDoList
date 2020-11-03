@@ -1,76 +1,92 @@
 const { ipcRenderer } = require('electron')
-const path = require('path')
-const TaskHandler = require(path.join('../src/TaskHandler.js'))
-const TaskComponents = require(path.join('../src/TaskComponents.js'))
+const sh = require('./shared.js')
 
-var index_counter = 0
+module.exports.init = init
+module.exports.respond = respond
 
-createBaseNode()
+var TaskDataArray = []
 
-document.addEventListener('click', function(e) {
-    button = e.target
+function init() {
+    addEventListener('click', (event) => {
+        var button = event.target
+        ButtonClickAction(button)
+    })
+}
 
-    console.log(button.parentNode.id)
-
-    if (button.id == 'send_btn') {
-        checkCreateNewTaskButton()
+function respond(event, data) {
+    if (data != null) {
+        ipcRenderer.invoke('send-task-data-action', data)
     }
-    else {
-       checkOtherTaskButtons(button)
+    ipcRenderer.invoke('get-task-data-action', 'create-tasks')
+}
+
+ipcRenderer.on('create-tasks', (event, data) => {
+    if (data != null) {
+        TaskDataArray = data
+        
+        if (TaskDataArray.length > 0) {
+            for(var i = 0; i < TaskDataArray.length; i++) {
+                sh.AddTask(document.getElementById('tasks'), TaskDataArray[i])
+            }
+        }
     }
+
 })
 
-function checkCreateNewTaskButton() {
-    var result = ipcRenderer.sendSync('create-new-task-action')
-    
-    if (result != -1) {
-        TaskHandler.addTask(index_counter)
-        index_counter++
-    }
-}
-
-function checkOtherTaskButtons(button) {
-    var parent_node = button.parentNode
-
+function ButtonClickAction(button) {
     switch(button.id) {
-        case "done":
-            //doneButtonClickAction(parent_node)
-            settingsButtonClickAction(parent_node)
+        case 'create':
+            ipcRenderer.invoke('create-new-task-action')
+            sh.ForwardToHTMLPage('create_task')
+            break
+        
+        case 'done':
+            doneButtonClickAction(button.parentNode)
             break
 
-        case "settings":
+        case 'edit':
             toggleButton(button)
             break
-        case "delete_component":
-            deleteComponentClickAction(parent_node)
+
+        case 'delete_component':
+            deleteComponentClickAction(button.parentNode)
+            break
+
+        default:
+            console.log(button.id)
             break
     }
 }
 
-function toggleButton() {
-    var components_box = TaskComponents.getComponentsBoxFromTask(button.parentNode)
+function toggleButton(button) {
+    var task = button.parentNode
+    var components_box = task.querySelector('#components')
     var children_component_array = components_box.childNodes
 
     var task = components_box.parentNode
-    var editable = getAllEditableElementsFromTask(task)
+    var editable = GetAllEditableElementsFromTask(task)
+
+    console.log(editable)
+    console.log(components_box)
+    console.log(children_component_array)
 
     if(button.getAttribute('class') == 'toggle_on') {
         button.setAttribute('class', 'toggle_off')
 
-        for(var i = 0; i < children_component_array.length; i++) {
+        /*for(var i = 0; i < children_component_array.length; i++) {
            children_component_array[i].querySelector("button").setAttribute("class", "hidden")
-        }
+        }*/
 
         for(var i = 0; i < editable.length; i++) {
             editable[i].setAttribute("contenteditable", "false")
-         }
+        }
     }
     else {
         button.setAttribute('class', 'toggle_on')
 
-        for(var i = 0; i < children_component_array.length; i++) {
+        /*for(var i = 0; i < children_component_array.length; i++) {
            children_component_array[i].querySelector("button").setAttribute("class", "shown")
-        }
+        }*/
 
         for(var i = 0; i < editable.length; i++) {
            editable[i].setAttribute("contenteditable", "true")
@@ -78,39 +94,26 @@ function toggleButton() {
     }
 }
 
-function doneButtonClickAction(parent_node) {
-    TaskHandler.removeTask(parent_node.id)
+function GetAllEditableElementsFromTask(target_task) {
+    return target_task.querySelectorAll("[contenteditable]")
 }
 
-function settingsButtonClickAction(parent_node) {
-    var result = ipcRenderer.sendSync('task-settings-action')
+function doneButtonClickAction(parent_node) {
+    sh.RemoveTask(parent_node)
 
-    switch(result) {
-        case 0:
-            TaskComponents.addComponentToTask(parent_node, "checklist")
-            console.log("Add component menu")
-            break
-        case 1:
-            console.log("Delete component menu")
-            break
-        default:
-            break
+    var parent_node_title = parent_node.querySelector('#title').innerHTML
+    
+    for(var i = 0; i < TaskDataArray.length; i++) {
+        if (TaskDataArray[i][0] == parent_node.id) {
+            TaskDataArray.splice(i, 1)
+        }
     }
+
+    ipcRenderer.invoke('replace-task-array-action', TaskDataArray)
 }
 
 function deleteComponentClickAction(button) {
     var component = button.parentNode
     var target_task = component.parentNode
     TaskComponents.removeComponent(target_task, component)
-}
-
-function getAllEditableElementsFromTask(target_task) {
-    return target_task.querySelectorAll("[contenteditable]")
-}
-
-function createBaseNode() {
-    var root = document.getElementsByTagName("body")[0]
-    var base_node = document.createElement('div')
-    base_node.setAttribute('id', "base_node")
-    root.appendChild(base_node)
 }
